@@ -1,28 +1,23 @@
 name: CI/CD Pipeline
-
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-
 jobs:
   build-and-push:
-    runs-on: self-hosted   # or ubuntu-latest if you want GitHub-hosted runners
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.CR_PAT }}
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
@@ -31,7 +26,6 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}:latest
             ghcr.io/${{ github.repository }}:${{ github.sha }}
-
       - name: Update GitOps repository
         shell: bash
         env:
@@ -45,10 +39,9 @@ jobs:
           rm -rf gitops
           
           # Clone repository using HTTPS URL without token
-          git clone https://github.com/shaikh4git/k8s-gitops.git gitops
+          git clone https://github.com/rslim087a/grade-api-gitops.git gitops
           cd gitops
           
-          # Update deployment.yaml with new image
           if [[ "$OSTYPE" == "darwin"* ]]; then
             sed -i '' "s|image: ghcr.io/${{ github.repository }}:.*|image: ghcr.io/${{ github.repository }}:${{ github.sha }}|g" deployment.yaml
           else
@@ -62,4 +55,4 @@ jobs:
           git commit -m "Update image to ${{ github.sha }}"
           
           # Push
-          git push -f https://${GIT_TOKEN}@github.com/shaikh4git/k8s-gitops.git main
+          git push -f https://${GIT_TOKEN}@github.com/rslim087a/grade-api-gitops.git main
